@@ -35,10 +35,6 @@ export function detectVersion(lang: string): string | null {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Template token resolution
-// ---------------------------------------------------------------------------
-
 function resolveVersion(version: string | null, lang: string): string {
   return version ?? `<!-- TODO: set runtime version, e.g. ${lang} 1.0.0 -->`;
 }
@@ -55,7 +51,7 @@ export interface SkillEntry {
 
 export interface DiscoveredSkills {
   skills: SkillEntry[];
-  hasPatterns: boolean;
+  hasLangSpecific: boolean; // true if templates/skills/<lang>/ exists and is non-empty
 }
 
 /**
@@ -108,7 +104,7 @@ export function discoverSkills(templatesDir: string, lang: string): DiscoveredSk
   const entries: SkillEntry[] = [];
 
   if (!fs.existsSync(skillsDir)) {
-    return { skills: [], hasPatterns: false };
+    return { skills: [], hasLangSpecific: false };
   }
 
   // General skills: templates/skills/*.md
@@ -127,7 +123,7 @@ export function discoverSkills(templatesDir: string, lang: string): DiscoveredSk
 
   // Language-specific skills: templates/skills/<lang>/*.md
   const langDir = path.join(skillsDir, lang);
-  let hasPatterns = false;
+  let hasLangSpecific = false;
   if (fs.existsSync(langDir) && fs.statSync(langDir).isDirectory()) {
     const langFiles = fs.readdirSync(langDir).filter((f) => f.endsWith(".md"));
     for (const file of langFiles) {
@@ -144,16 +140,13 @@ export function discoverSkills(templatesDir: string, lang: string): DiscoveredSk
         description,
         templatePath: `skills/${lang}/${file}`,
       });
-      // A language-specific skill is considered a "patterns" skill if its
-      // name contains "pattern" or "testing" — this is the convention used
-      // by the project.
-      if (/pattern|testing/.test(dirName)) {
-        hasPatterns = true;
-      }
+    }
+    if (langFiles.length > 0) {
+      hasLangSpecific = true;
     }
   }
 
-  return { skills: entries, hasPatterns };
+  return { skills: entries, hasLangSpecific };
 }
 
 // ---------------------------------------------------------------------------
@@ -173,17 +166,23 @@ export function buildTokens(
     .map((s) => `| ${s.name.padEnd(20)} | ${s.description} |`)
     .join("\n");
 
-  const languagePatternsRef = discovered.hasPatterns
+  const langSpecificSkills = discovered.skills.filter(
+    (s) => s.templatePath.startsWith(`skills/${lang}/`)
+  );
+  const langSpecificNames = langSpecificSkills.map((s) => `- ${s.name}`).join("\n");
+
+  const languagePatternsRef = discovered.hasLangSpecific
     ? `## Style reference\n\n` +
-    `For ${langUpper}-specific style guidance, refer to the language-specific patterns\n` +
-    `skill(s). They are the authoritative source for naming, error handling,\n` +
-    `struct design, and other language conventions in this project.\n\n` +
-    `When boring-code and the patterns skill(s) are both active, apply the\n` +
-    `patterns skill\'s guidance for style decisions. Do not reproduce their\n` +
-    `code examples verbatim — use them to inform what boring looks like for\n` +
-    `this language.`
+    `For ${langUpper}-specific style guidance, refer to the following\n` +
+    `language-specific skill(s):\n\n` +
+    `${langSpecificNames}\n\n` +
+    `They are the authoritative source for naming, error handling, struct\n` +
+    `design, and other language conventions in this project.\n\n` +
+    `When boring-code and these skills are both active, apply their guidance\n` +
+    `for style decisions. Do not reproduce their code examples verbatim —\n` +
+    `use them to inform what boring looks like for this language.`
     : `## Style reference\n\n` +
-    `No language-specific patterns skill is configured for ${langUpper} yet.\n` +
+    `No language-specific skill is configured for ${langUpper} yet.\n` +
     `Apply the boring-code standard above using the language\'s own idiomatic\n` +
     `conventions as the style anchor.`;
 
