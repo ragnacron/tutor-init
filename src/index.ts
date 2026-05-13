@@ -34,7 +34,7 @@ export default function (pi: ExtensionAPI) {
 
       // Version detection
       let version: string | null = null;
-      const detected = detectVersion(cwd, lang);
+      const detected = detectVersion(piDir, lang);
 
       if (detected) {
         const embed = await ctx.ui.confirm(
@@ -45,7 +45,7 @@ export default function (pi: ExtensionAPI) {
           version = detected;
         }
       } else {
-        const config = loadVersionConfig(cwd);
+        const config = loadVersionConfig(piDir);
         if (config?.versionCommands?.[lang]) {
           ctx.ui.notify(
             `Command configured for "${lang}" but failed to detect a version. ` +
@@ -77,7 +77,8 @@ export default function (pi: ExtensionAPI) {
     description: "Re-detect the runtime version and patch .pi/AGENTS.md",
     handler: async (_, ctx) => {
       const cwd = process.cwd();
-      const agentsMdPath = path.join(cwd, ".pi", "AGENTS.md");
+      const piDir = path.join(cwd, ".pi");
+      const agentsMdPath = path.join(piDir, "AGENTS.md");
 
       if (!fs.existsSync(agentsMdPath)) {
         ctx.ui.notify(
@@ -101,7 +102,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       const lang = langMatch[1].toLowerCase();
-      const config = loadVersionConfig(cwd);
+      const config = loadVersionConfig(piDir);
       const cmd = config?.versionCommands?.[lang];
 
       if (!cmd) {
@@ -113,7 +114,7 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const detected = detectVersion(cwd, lang);
+      const detected = detectVersion(piDir, lang);
 
       if (!detected) {
         ctx.ui.notify(
@@ -162,7 +163,8 @@ export default function (pi: ExtensionAPI) {
       }
 
       const cwd = process.cwd();
-      const config = loadVersionConfig(cwd);
+      const piDir = path.join(cwd, ".pi");
+      const config = loadVersionConfig(piDir);
       const existing = config?.versionCommands?.[lang];
 
       if (existing) {
@@ -184,7 +186,7 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      addVersionCommand(cwd, lang, input.trim());
+      addVersionCommand(piDir, lang, input.trim());
       ctx.ui.notify(
         `Added command for "${lang}" (\`${input.trim()}\`). ` +
         `Run /tutor-init ${lang} to scaffold.`,

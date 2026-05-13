@@ -1,0 +1,5 @@
+{
+  "versionCommands": {
+    "go": "go version"
+  }
+}

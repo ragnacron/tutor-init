@@ -13,8 +13,8 @@ interface VersionConfig {
 const CONFIG_FILENAME = "tutor-version.json";
 
 /** Load project version config. Returns null when the file is missing. */
-export function loadVersionConfig(cwd: string): VersionConfig | null {
-  const configPath = path.join(cwd, ".pi", CONFIG_FILENAME);
+export function loadVersionConfig(piDir: string): VersionConfig | null {
+  const configPath = path.join(piDir, CONFIG_FILENAME);
   try {
     const raw = fs.readFileSync(configPath, "utf8");
     return JSON.parse(raw) as VersionConfig;
@@ -24,17 +24,17 @@ export function loadVersionConfig(cwd: string): VersionConfig | null {
 }
 
 /** Save (or overwrite) the project version config. */
-export function saveVersionConfig(cwd: string, config: VersionConfig): void {
-  const configPath = path.join(cwd, ".pi", CONFIG_FILENAME);
+export function saveVersionConfig(piDir: string, config: VersionConfig): void {
+  const configPath = path.join(piDir, CONFIG_FILENAME);
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf8");
 }
 
 /** Add or overwrite a version command for the given language. */
-export function addVersionCommand(cwd: string, lang: string, command: string): void {
-  const config = loadVersionConfig(cwd) ?? { versionCommands: {} };
+export function addVersionCommand(piDir: string, lang: string, command: string): void {
+  const config = loadVersionConfig(piDir) ?? { versionCommands: {} };
   config.versionCommands[lang.toLowerCase()] = command;
-  saveVersionConfig(cwd, config);
+  saveVersionConfig(piDir, config);
 }
 
 /**
@@ -42,8 +42,8 @@ export function addVersionCommand(cwd: string, lang: string, command: string): v
  * Reads the command from .pi/tutor-version.json, falls back to a version
  * placeholder when the command is not configured or fails.
  */
-export function detectVersion(cwd: string, lang: string): string | null {
-  const config = loadVersionConfig(cwd);
+export function detectVersion(piDir: string, lang: string): string | null {
+  const config = loadVersionConfig(piDir);
   if (!config) return null;
 
   const cmd = config.versionCommands[lang.toLowerCase()];
@@ -253,6 +253,25 @@ export function scaffoldTutor(
   // Discover and build tokens together
   const discovered = discoverSkills(TEMPLATES_DIR, lang);
   const tokens = buildTokens(lang, versionToken, detectedDate, discovered);
+
+  // Merge template version config into project
+  const templatePath = path.join(TEMPLATES_DIR, "tutor-version.json");
+  if (fs.existsSync(templatePath)) {
+    const template = JSON.parse(
+      fs.readFileSync(templatePath, "utf8")
+    ) as VersionConfig;
+    const configPath = path.join(piDir, CONFIG_FILENAME);
+    const existing = fs.existsSync(configPath)
+      ? (JSON.parse(fs.readFileSync(configPath, "utf8")) as VersionConfig)
+      : { versionCommands: {} };
+    const merged = { versionCommands: { ...existing.versionCommands } };
+    for (const [langEntry, cmd] of Object.entries(template.versionCommands)) {
+      if (!merged.versionCommands[langEntry]) {
+        merged.versionCommands[langEntry] = cmd;
+      }
+    }
+    saveVersionConfig(piDir, merged);
+  }
 
   // Write AGENTS.md
   const agentsMd = applyTokens(readTemplate("AGENTS.md"), tokens);
