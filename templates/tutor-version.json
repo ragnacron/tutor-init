@@ -1,5 +1,6 @@
 {
   "versionCommands": {
-    "go": "go version"
+    "go": "go version",
+    "python": "python --version"
   }
 }
