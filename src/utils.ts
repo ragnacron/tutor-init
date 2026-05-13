@@ -241,50 +241,57 @@ function applyTokens(template: string, tokens: Record<string, string>): string {
 // Scaffold
 // ---------------------------------------------------------------------------
 
+function mergeVersionConfig(piDir: string): void {
+  const templatePath = path.join(TEMPLATES_DIR, "tutor-version.json");
+  if (!fs.existsSync(templatePath)) return;
+
+  const template = JSON.parse(fs.readFileSync(templatePath, "utf8")) as VersionConfig;
+  const configPath = path.join(piDir, CONFIG_FILENAME);
+
+  const existing = fs.existsSync(configPath)
+    ? (JSON.parse(fs.readFileSync(configPath, "utf8")) as VersionConfig)
+    : { versionCommands: {} };
+
+  const merged: VersionConfig = {
+    versionCommands: { ...existing.versionCommands },
+  };
+  for (const [lang, cmd] of Object.entries(template.versionCommands)) {
+    if (!merged.versionCommands[lang]) {
+      merged.versionCommands[lang] = cmd;
+    }
+  }
+  saveVersionConfig(piDir, merged);
+}
+
+function writeAgentsMd(piDir: string, tokens: Record<string, string>): void {
+  const agentsMd = applyTokens(readTemplate("AGENTS.md"), tokens);
+  fs.mkdirSync(piDir, { recursive: true });
+  fs.writeFileSync(path.join(piDir, "AGENTS.md"), agentsMd, "utf8");
+}
+
+function writeSkills(piDir: string, skills: SkillEntry[], tokens: Record<string, string>): void {
+  const skillsDir = path.join(piDir, "skills");
+  for (const skill of skills) {
+    const skillDir = path.join(skillsDir, skill.name);
+    fs.mkdirSync(skillDir, { recursive: true });
+    const content = applyTokens(readTemplate(skill.templatePath), tokens);
+    fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
+  }
+}
+
 export function scaffoldTutor(
   piDir: string,
   lang: string,
   version: string | null,
   detectedDate: string
 ): void {
-  const skillsDir = path.join(piDir, "skills");
-  const versionToken = resolveVersion(version, lang);
+  mergeVersionConfig(piDir);
 
-  // Discover and build tokens together
   const discovered = discoverSkills(TEMPLATES_DIR, lang);
-  const tokens = buildTokens(lang, versionToken, detectedDate, discovered);
+  const tokens = buildTokens(lang, resolveVersion(version, lang), detectedDate, discovered);
 
-  // Merge template version config into project
-  const templatePath = path.join(TEMPLATES_DIR, "tutor-version.json");
-  if (fs.existsSync(templatePath)) {
-    const template = JSON.parse(
-      fs.readFileSync(templatePath, "utf8")
-    ) as VersionConfig;
-    const configPath = path.join(piDir, CONFIG_FILENAME);
-    const existing = fs.existsSync(configPath)
-      ? (JSON.parse(fs.readFileSync(configPath, "utf8")) as VersionConfig)
-      : { versionCommands: {} };
-    const merged = { versionCommands: { ...existing.versionCommands } };
-    for (const [langEntry, cmd] of Object.entries(template.versionCommands)) {
-      if (!merged.versionCommands[langEntry]) {
-        merged.versionCommands[langEntry] = cmd;
-      }
-    }
-    saveVersionConfig(piDir, merged);
-  }
-
-  // Write AGENTS.md
-  const agentsMd = applyTokens(readTemplate("AGENTS.md"), tokens);
-  fs.mkdirSync(piDir, { recursive: true });
-  fs.writeFileSync(path.join(piDir, "AGENTS.md"), agentsMd, "utf8");
-
-  // Write skills
-  for (const skill of discovered.skills) {
-    const skillDir = path.join(skillsDir, skill.name);
-    fs.mkdirSync(skillDir, { recursive: true });
-    const content = applyTokens(readTemplate(skill.templatePath), tokens);
-    fs.writeFileSync(path.join(skillDir, "SKILL.md"), content, "utf8");
-  }
+  writeAgentsMd(piDir, tokens);
+  writeSkills(piDir, discovered.skills, tokens);
 }
 
 // ---------------------------------------------------------------------------
