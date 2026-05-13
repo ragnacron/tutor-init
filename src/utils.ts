@@ -3,12 +3,6 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 // ---------------------------------------------------------------------------
-// Semver extraction — shared by all language version commands
-// ---------------------------------------------------------------------------
-
-const SEMVER = /(\d+\.\d+(?:\.\d+)?)/;
-
-// ---------------------------------------------------------------------------
 // Project-level version config: .pi/tutor-version.json
 // ---------------------------------------------------------------------------
 
@@ -57,7 +51,7 @@ export function detectVersion(cwd: string, lang: string): string | null {
 
   try {
     const output = execSync(cmd, { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
-    const match = output.match(SEMVER);
+    const match = output.match(/(\d+\.\d+(?:\.\d+)?)/);
     return match ? match[1] : null;
   } catch {
     return null;
