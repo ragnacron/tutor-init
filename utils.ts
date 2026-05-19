@@ -223,7 +223,7 @@ export function buildTokens(
 // Template helpers
 // ---------------------------------------------------------------------------
 
-const TEMPLATES_DIR = path.join(__dirname, "..", "templates");
+const TEMPLATES_DIR = path.join(__dirname, "templates");
 
 export function readTemplate(filename: string): string {
   const filepath = path.join(TEMPLATES_DIR, filename);

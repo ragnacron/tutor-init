@@ -4,13 +4,20 @@
   "license": "MIT",
   "author": "RagnaCron",
   "type": "module",
-  "main": "./src/index.js",
+  "main": "./index.ts",
   "pi": {
     "extensions": [
-      "./src/index.ts"
+      "./index.ts"
     ]
   },
+  "files": [
+    "./index.ts",
+    "./utils.ts"
+  ],
   "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.75.3"
+  },
+  "dependencies": {
     "@earendil-works/pi-coding-agent": "^0.75.3"
   }
 }
