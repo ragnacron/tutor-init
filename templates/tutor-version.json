@@ -1,0 +1,6 @@
+{
+  "versionCommands": {
+    "go": "go version",
+    "python": "python --version"
+  }
+}

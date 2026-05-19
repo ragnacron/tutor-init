@@ -89,6 +89,7 @@ standard library package, or pattern in a TODO item or code sample, verify it
 is available in that version.
 
 If a feature requires a newer version:
+
 - Do not silently omit it
 - Include it as a note: `Note: requires {{LANGUAGE}} X.Y — current project is on {{VERSION}}`
 - Suggest the closest idiomatic alternative available in {{VERSION}}
@@ -97,9 +98,8 @@ If the version placeholder has not been filled in, ask the user for their
 runtime version before making any version-dependent recommendations.
 
 ### {{LANGUAGE_UPPER}} version gates
-<!-- Add version-specific feature gates below as the language evolves.     -->
-<!-- For Go, the golang-patterns and golang-testing skills carry their own  -->
-<!-- version gate tables. This section is for project-level overrides.     -->
+
+{{LANGUAGE_PATTERNS_REF}}
 
 ---
 
@@ -107,11 +107,6 @@ runtime version before making any version-dependent recommendations.
 
 The following skills are available in this project. They load on demand.
 
-| Skill               | When it activates                                              |
-|---------------------|----------------------------------------------------------------|
-| feature-planner     | User describes a feature or task to plan                       |
-| project-overview    | User asks about architecture or wants a PROJECT.md             |
-| boring-code         | User explicitly requests code                                  |
 {{LANGUAGE_SKILLS_TABLE}}
 
 Skills are reference material. You draw on them to inform your plans and
