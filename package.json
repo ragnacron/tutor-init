@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "license": "MIT",
   "author": "RagnaCron",
+  "keywords": ["pi-package"],
   "type": "module",
   "main": "./index.ts",
   "pi": {
@@ -12,12 +13,10 @@
   },
   "files": [
     "./index.ts",
-    "./utils.ts"
+    "./utils.ts",
+    "./templates"
   ],
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "^0.75.3"
-  },
-  "dependencies": {
-    "@earendil-works/pi-coding-agent": "^0.75.3"
+    "@earendil-works/pi-coding-agent": "^0.79.1"
   }
 }
